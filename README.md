@@ -33,7 +33,37 @@ On each switch:
 
 ## Install
 
-You need macOS 13 or later, Python 3, and Xcode or the Command Line Tools (to compile the menu bar app).
+You need macOS 13 or later, on Apple Silicon or Intel, plus Python 3. The app uses Homebrew's `python3` if you have it, otherwise `/usr/bin/python3`. That one comes with the Command Line Tools, and macOS offers to install them the first time it runs.
+
+### Download the app
+
+1. Download `Claude-Desktop-Switcher-vX.Y.Z.zip` from the [latest release](https://github.com/bradleyzaia/claude-desktop-account-switcher/releases/latest).
+2. Unzip it and drag **Claude Desktop Switcher.app** into `/Applications` or `~/Applications`.
+3. Open it. A 👥 icon appears in the menu bar.
+
+The app is **ad-hoc signed, not notarized**, so macOS blocks it the first time you open it. Either:
+- open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**, or
+- remove the download quarantine flag in Terminal:
+  ```bash
+  xattr -dr com.apple.quarantine "/Applications/Claude Desktop Switcher.app"
+  ```
+
+The app has the CLI built in, so you don't need anything else. To also use the CLI from Terminal, link it onto your PATH:
+
+```bash
+mkdir -p ~/.local/bin
+ln -sf "/Applications/Claude Desktop Switcher.app/Contents/Resources/claude-desktop-switch.py" ~/.local/bin/claude-desktop-switch
+```
+
+To check the download, compare it with the `.sha256` file on the release:
+
+```bash
+shasum -a 256 -c Claude-Desktop-Switcher-vX.Y.Z.zip.sha256
+```
+
+### Build from source
+
+This also needs Xcode or the Command Line Tools, to compile the app.
 
 ```bash
 git clone https://github.com/bradleyzaia/claude-desktop-account-switcher.git
@@ -121,12 +151,22 @@ Saved profiles contain live login cookies and tokens. Desktop encrypts them with
 
 ```bash
 pkill -x ClaudeDesktopSwitcher
-rm -rf ~/Applications/Claude\ Desktop\ Switcher.app ~/.local/bin/claude-desktop-switch
+rm -rf "/Applications/Claude Desktop Switcher.app" "$HOME/Applications/Claude Desktop Switcher.app"
+rm -f ~/.local/bin/claude-desktop-switch
 # Optional: saved logins and backups
 rm -rf ~/.config/claude-desktop-switcher
 ```
 
 Also remove the app from Login Items if you added it.
+
+## Releasing
+
+```bash
+echo 0.2.0 > VERSION
+scripts/package-release.sh   # -> dist/Claude-Desktop-Switcher-v0.2.0.zip + .sha256
+```
+
+`scripts/build-app.sh` builds a universal (arm64 + x86_64), ad-hoc signed bundle with the CLI inside `Contents/Resources`.
 
 ## Not affiliated
 

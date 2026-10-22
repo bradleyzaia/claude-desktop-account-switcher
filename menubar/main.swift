@@ -1,9 +1,11 @@
-// Menu bar front end for ~/.local/bin/claude-desktop-switch.
+// Menu bar front end for claude-desktop-switch.
 // All switching logic lives in that script; this app only shows profiles and runs it.
+// Prefers the copy bundled in Resources (version-matched), else the installed CLI.
 
 import AppKit
 
-let scriptPath = NSString(string: "~/.local/bin/claude-desktop-switch").expandingTildeInPath
+let scriptPath = Bundle.main.path(forResource: "claude-desktop-switch", ofType: "py")
+    ?? NSString(string: "~/.local/bin/claude-desktop-switch").expandingTildeInPath
 let profilesPath = NSString(string: "~/.config/claude-desktop-switcher/profiles").expandingTildeInPath
 let pythonPath = ["/opt/homebrew/bin/python3", "/usr/local/bin/python3", "/usr/bin/python3"]
     .first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/usr/bin/python3"
