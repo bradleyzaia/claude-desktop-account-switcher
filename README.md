@@ -168,6 +168,10 @@ scripts/package-release.sh   # -> dist/Claude-Desktop-Switcher-v0.2.0.zip + .sha
 
 `scripts/build-app.sh` builds a universal (arm64 + x86_64), ad-hoc signed bundle with the CLI inside `Contents/Resources`.
 
+## License
+
+[MIT](LICENSE)
+
 ## Not affiliated
 
 This is an independent tool. It isn't made or supported by Anthropic.
