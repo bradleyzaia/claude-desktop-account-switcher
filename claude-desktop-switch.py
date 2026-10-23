@@ -113,7 +113,10 @@ def quit_desktop(timeout=30):
     if running_inside_desktop():
         die("Run this from Terminal.app, not inside Claude Desktop (quitting Desktop would kill it).")
     print("Quitting Claude Desktop...")
-    subprocess.run(["osascript", "-e", f'quit app "{APP_NAME}"'], capture_output=True)
+    r = subprocess.run(["osascript", "-e", f'quit app "{APP_NAME}"'], capture_output=True, text=True)
+    if "-1743" in r.stderr:  # errAEEventNotPermitted
+        die("macOS blocked quitting Claude. Allow it in System Settings > Privacy & Security > "
+            "Automation (turn on 'Claude' under this app or Terminal), then retry.")
     deadline = time.time() + timeout
     while time.time() < deadline:
         if not desktop_running():

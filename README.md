@@ -97,7 +97,9 @@ Saving refuses if Desktop is still signed in to an account you've already saved 
 
 ## Menu bar app
 
-A 👥 icon in the menu bar, labeled with the name of the profile Desktop is signed in to.
+A 👥 icon in the menu bar. Hover over it to see which profile Desktop is signed in to.
+
+The app starts near the clock, because on a notched MacBook a full menu bar hides new icons behind the notch. If it still can't fit, it shows a one-time alert. Hold ⌘ and drag the icon to move it.
 
 | Item | What it does |
 | --- | --- |
@@ -127,6 +129,7 @@ Run the CLI from **Terminal.app**, not from a terminal inside Claude Desktop. Qu
 | `~/.config/claude-desktop-switcher/profiles/<name>/` | `Cookies`, `config-auth.json`, `meta.json` (mode `0600`, folder `0700`) |
 | `~/.config/claude-desktop-switcher/backups/` | The 10 most recent `claude-code-sessions` tarballs |
 | `~/.config/claude-desktop-switcher/state.json` | Last-used profile name |
+| `~/.config/claude-desktop-switcher/app.log` | Menu bar app log: launch, icon placement, each action and its output |
 
 Saved profiles contain live login cookies and tokens. Desktop encrypts them with a key from your login Keychain (`Claude Safe Storage`), so they only work on this Mac and this user account. Still, treat the folder as secret, and don't commit it or put it in a synced folder.
 

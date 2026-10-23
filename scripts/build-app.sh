@@ -22,6 +22,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 lipo -create -output "$APP/Contents/MacOS/ClaudeDesktopSwitcher" "$TMP"/ClaudeDesktopSwitcher-*
 install -m 755 "$ROOT/claude-desktop-switch.py" "$APP/Contents/Resources/claude-desktop-switch.py"
+install -m 644 "$ROOT/LICENSE" "$APP/Contents/Resources/LICENSE"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
