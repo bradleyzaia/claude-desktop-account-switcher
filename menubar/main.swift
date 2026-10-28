@@ -130,14 +130,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 menu.addItem(NSMenuItem(title: "Current login isn't saved", action: nil, keyEquivalent: ""))
             }
             if status.profiles.count < 2 {
-                menu.addItem(NSMenuItem(title: "To add an account: log in to it in Claude Desktop,", action: nil, keyEquivalent: ""))
-                menu.addItem(NSMenuItem(title: "then choose Save Current Login As…", action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: "To add an account, choose Add Account…", action: nil, keyEquivalent: ""))
             }
         } else {
             menu.addItem(NSMenuItem(title: "Can't read \(scriptPath)", action: nil, keyEquivalent: ""))
         }
 
         menu.addItem(.separator())
+        addAction(menu, "Add Account…", #selector(addAccount))
         addAction(menu, "Save Current Login As…", #selector(saveCurrent))
         addAction(menu, "Sync Sessions Now", #selector(syncNow))
         addAction(menu, "Show Profiles Folder", #selector(showProfiles), alwaysEnabled: true)
@@ -157,6 +157,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                       "Claude Desktop will quit, sessions will be synced across accounts, and Desktop reopens signed in as \(name). Anything running in Desktop stops.",
                       "Switch") else { return }
         run(["use", name])
+    }
+
+    @objc func addAccount() {
+        guard confirm("Add another Claude account?",
+                      "Claude Desktop will quit and reopen at its sign-in screen. The current login is saved first and stays valid (this doesn't use Desktop's Log out, which would end it). After you sign in, choose Save Current Login As… to name the new account.",
+                      "Continue") else { return }
+        run(["add"])
     }
 
     @objc func saveCurrent() {

@@ -88,12 +88,16 @@ osascript -e 'tell application "System Events" to make login item at end with pr
 
 ## First-time setup
 
-Save each account once, while Desktop is signed in to it:
+Save each account once:
 
-1. Sign in to Desktop as account A. In the menu bar, choose **Save Current Login As…** and type a name, such as `work`.
-2. In Desktop, **log out** and sign in as account B. Choose **Save Current Login As…** again and type a different name, such as `personal`.
+1. While Desktop is signed in to your first account, choose **Save Current Login As…** in the menu bar and type a name, such as `work`.
+2. Choose **Add Account…**. Desktop quits and reopens at its sign-in screen. Sign in to the next account, then choose **Save Current Login As…** again with a new name, such as `personal`.
 
-Saving refuses if Desktop is still signed in to an account you've already saved under another name. That guards against saving the same login twice.
+Use **Add Account…** rather than Desktop's own **Log out**. Log out ends that session on Anthropic's servers, which also breaks the saved copy of that login. Add Account only clears the login on your Mac, so every saved login keeps working.
+
+After setup, switch only from the menu. If you sign in to Desktop some other way, the next switch still saves that login before switching. It goes to the account's existing profile, or, if the account isn't saved yet, to an `auto-<id>` profile that you can rename with **Save Current Login As…**.
+
+Saving refuses a name already used for a different account, and a second name for an account that's already saved.
 
 ## Menu bar app
 
@@ -104,6 +108,7 @@ The app starts near the clock, because on a notched MacBook a full menu bar hide
 | Item | What it does |
 | --- | --- |
 | *Profiles* (✓ = signed in now) | Click to switch: quits Desktop, syncs, restores the login, reopens Desktop |
+| Add Account… | Saves the current login, then signs Desktop out on this Mac only, so another account can sign in |
 | Save Current Login As… | Saves the account Desktop is signed in to under a name |
 | Sync Sessions Now | Syncs sessions only, without changing accounts |
 | Show Profiles Folder | Opens `~/.config/claude-desktop-switcher/profiles` |
@@ -116,6 +121,7 @@ The first time you switch, macOS asks whether *Claude Desktop Switcher* may cont
 claude-desktop-switch list               # saved profiles; * = current, (live) = signed in now
 claude-desktop-switch save <name>        # save the current Desktop login
 claude-desktop-switch use <name>         # switch Desktop to <name> (also syncs)
+claude-desktop-switch add                # sign Desktop out on this Mac to add another account
 claude-desktop-switch sync [--dry-run]   # sync sessions only
 claude-desktop-switch status --json      # machine-readable state (used by the app)
 ```

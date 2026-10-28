@@ -15,6 +15,7 @@ This tool, Codex-switcher style:
 Usage:
   claude-desktop-switch.py save <name>     snapshot current Desktop login as <name>
   claude-desktop-switch.py use <name>      switch Desktop to <name> (syncs sessions)
+  claude-desktop-switch.py add             sign Desktop out on this Mac to add an account
   claude-desktop-switch.py sync [--dry-run]  only merge sessions across accounts
   claude-desktop-switch.py list
   claude-desktop-switch.py status --json   (used by the menu bar app)
@@ -173,6 +174,47 @@ def restore(name):
     write_config(cfg)
 
 
+def clear_login():
+    """Sign Desktop out on this Mac only. Desktop's own Log out also ends the
+    session server-side, which would kill the saved copy of that login."""
+    for f in AUTH_FILES:
+        (DATA / f).unlink(missing_ok=True)
+    cfg = read_config()
+    for k in [k for k in cfg if k.startswith(AUTH_KEY_PREFIXES) or k in AUTH_KEYS]:
+        del cfg[k]
+    write_config(cfg)
+
+
+def profiles_for(uuid):
+    """Profile names saved for an account, real names before auto-* ones."""
+    if not uuid or not PROFILES.exists():
+        return []
+    names = [p.name for p in PROFILES.iterdir() if (profile_meta(p.name) or {}).get("accountUuid") == uuid]
+    return sorted(names, key=lambda n: (n.startswith("auto-"), n))
+
+
+def save_live_login(state):
+    """Refresh the profile for whichever account Desktop is signed in to (refresh
+    tokens rotate, so an old snapshot goes stale). Desktop must be quit."""
+    live = live_account_uuid()
+    if not live:
+        return None
+    names = profiles_for(live)
+    name = state.get("current") if state.get("current") in names else (names[0] if names else None)
+    if name is None:
+        name = f"auto-{live[:8]}"
+        print(f"The current login ({live}) isn't saved yet; saving it as '{name}'.")
+    snapshot(name)
+    return name
+
+
+def retire_profile(name):
+    """Move a superseded profile into backups rather than deleting it."""
+    dest = BACKUPS / f"{name}-retired-{time.strftime('%Y%m%d-%H%M%S')}"
+    shutil.move(str(PROFILES / name), dest)
+    return dest
+
+
 def profile_meta(name):
     try:
         return json.loads((PROFILES / name / "meta.json").read_text())
@@ -276,14 +318,21 @@ def cmd_save(name):
         die("Profile names use letters, digits, '.', '_' or '-' (max 40 chars).")
     ensure_dirs()
     live = live_account_uuid()
-    for p in PROFILES.iterdir():
-        meta = profile_meta(p.name) or {}
-        if p.name != name and meta.get("accountUuid") == live:
-            die(f"Desktop is signed in to the account already saved as '{p.name}'. "
-                f"Log out in Desktop, log in to the other account, then save again.")
+    if not live:
+        die("Claude Desktop isn't signed in. Sign in first, then save.")
+    existing = profile_meta(name)
+    if existing and existing.get("accountUuid") != live:
+        die(f"'{name}' is already saved for a different account. Pick another name.")
+    others = [n for n in profiles_for(live) if n != name]
+    taken = [n for n in others if not n.startswith("auto-")]
+    if taken:
+        die(f"Desktop is signed in to the account already saved as '{taken[0]}'. "
+            f"To add another account, use Add Account (CLI: add), sign in, then save.")
     was_running = desktop_running()
     quit_desktop()
     meta = snapshot(name)
+    for n in others:  # auto-saved copies of this account are superseded by the named one
+        print(f"Replaced '{n}' (moved to {retire_profile(n)}).")
     state = load_state()
     state["current"] = name
     save_state(state)
@@ -298,25 +347,30 @@ def cmd_use(name):
     if not target:
         die(f"No profile '{name}'. Run: save {name}  (while signed in to that account)")
     state = load_state()
-    current = state.get("current")
 
     quit_desktop()
-
-    # Save the live login first: refresh tokens rotate, so an old snapshot goes stale.
-    live = live_account_uuid()
-    cur_meta = profile_meta(current) if current else None
-    if cur_meta and cur_meta.get("accountUuid") == live:
-        snapshot(current)
-    elif live:
-        auto = f"auto-{live[:8]}"
-        print(f"Live login ({live}) doesn't match profile '{current}'; saving it as '{auto}'.")
-        snapshot(auto)
-
+    save_live_login(state)
     sync_sessions()
     restore(name)
     state["current"] = name
     save_state(state)
     print(f"Switched Desktop to '{name}' (account {target['accountUuid']}).")
+    open_desktop()
+
+
+def cmd_add():
+    """Sign Desktop out on this Mac so another account can sign in."""
+    ensure_dirs()
+    state = load_state()
+    quit_desktop()
+    saved = save_live_login(state)
+    if saved:
+        print(f"Saved the current login as '{saved}'.")
+    clear_login()
+    state.pop("current", None)
+    save_state(state)
+    print("Desktop is signed out on this Mac. Sign in to the new account, then save it "
+          "(menu: Save Current Login As…, CLI: save <name>).")
     open_desktop()
 
 
@@ -357,6 +411,8 @@ def main(argv):
         cmd_save(args[0])
     elif cmd == "use" and len(args) == 1:
         cmd_use(args[0])
+    elif cmd == "add" and not args:
+        cmd_add()
     elif cmd == "sync":
         ensure_dirs()
         dry_run = "--dry-run" in args

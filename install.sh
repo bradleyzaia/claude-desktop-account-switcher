@@ -7,6 +7,8 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 BIN="$HOME/.local/bin"
 DEST="$HOME/Applications"
+# Update an existing copy in place (e.g. one moved to /Applications) instead of adding a second
+[ -d "/Applications/Claude Desktop Switcher.app" ] && DEST="/Applications"
 
 mkdir -p "$BIN"
 install -m 755 "$HERE/claude-desktop-switch.py" "$BIN/claude-desktop-switch"
